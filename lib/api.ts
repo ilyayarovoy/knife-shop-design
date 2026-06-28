@@ -48,3 +48,56 @@ export function getProduct(id: number) {
 export function getCart(userId: number) {
   return fetcher<ServerCart>(apiKeys.cart(userId))
 }
+
+async function mutateRequest<T>(
+  url: string,
+  method: "POST" | "PUT" | "DELETE",
+  body?: unknown,
+): Promise<T> {
+  const res = await fetch(url, {
+    method,
+    headers: {
+      Accept: "application/json",
+      ...(body ? { "Content-Type": "application/json" } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  })
+  if (!res.ok) {
+    throw new ApiError(`Ошибка запроса: ${res.status}`, res.status)
+  }
+  return (await res.json()) as T
+}
+
+// POST /api/cart/user/{userId}/add
+export function addToCart(userId: number, productId: number, quantity = 1) {
+  return mutateRequest(`${API_BASE}/cart/user/${userId}/add`, "POST", {
+    product_id: productId,
+    quantity,
+  })
+}
+
+// PUT /api/cart/user/{userId}/item/{itemId}
+export function updateCartItem(
+  userId: number,
+  itemId: number,
+  quantity: number,
+) {
+  return mutateRequest(
+    `${API_BASE}/cart/user/${userId}/item/${itemId}`,
+    "PUT",
+    { quantity },
+  )
+}
+
+// DELETE /api/cart/user/{userId}/item/{itemId}
+export function removeCartItem(userId: number, itemId: number) {
+  return mutateRequest(
+    `${API_BASE}/cart/user/${userId}/item/${itemId}`,
+    "DELETE",
+  )
+}
+
+// DELETE /api/cart/user/{userId}/clear
+export function clearCart(userId: number) {
+  return mutateRequest(`${API_BASE}/cart/user/${userId}/clear`, "DELETE")
+}
