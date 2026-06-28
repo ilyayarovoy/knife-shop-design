@@ -3,21 +3,15 @@
 import { Search } from "lucide-react"
 import { useMemo, useState } from "react"
 import { cn } from "@/lib/utils"
-import type { Product, ProductCategory } from "@/lib/types"
+import type { Category, Product } from "@/lib/types"
 import { ProductCard, ProductCardSkeleton } from "./product-card"
-
-type FilterKey = "all" | ProductCategory
-
-const FILTERS: { key: FilterKey; label: string }[] = [
-  { key: "all", label: "Все" },
-  { key: "hunting", label: "Охотничьи" },
-  { key: "folding", label: "Складные" },
-  { key: "kitchen", label: "Кухонные" },
-]
 
 interface CatalogTabProps {
   products: Product[]
+  categories: Category[]
   loading: boolean
+  error?: boolean
+  onRetry?: () => void
   getQuantity: (id: number) => number
   onAdd: (product: Product) => void
   onIncrement: (id: number) => void
@@ -27,7 +21,10 @@ interface CatalogTabProps {
 
 export function CatalogTab({
   products,
+  categories,
   loading,
+  error,
+  onRetry,
   getQuantity,
   onAdd,
   onIncrement,
@@ -35,17 +32,20 @@ export function CatalogTab({
   onOpen,
 }: CatalogTabProps) {
   const [query, setQuery] = useState("")
-  const [filter, setFilter] = useState<FilterKey>("all")
+  // null = "Все", иначе id категории
+  const [activeCategory, setActiveCategory] = useState<number | null>(null)
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
-      const matchesFilter = filter === "all" || p.category === filter
+      const matchesCategory =
+        activeCategory === null || p.category_id === activeCategory
+      const q = query.toLowerCase()
       const matchesQuery =
-        p.name.toLowerCase().includes(query.toLowerCase()) ||
-        p.description.toLowerCase().includes(query.toLowerCase())
-      return matchesFilter && matchesQuery
+        p.title.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q)
+      return matchesCategory && matchesQuery
     })
-  }, [products, filter, query])
+  }, [products, activeCategory, query])
 
   return (
     <div className="flex flex-col gap-4 px-4 pt-4">
@@ -61,24 +61,51 @@ export function CatalogTab({
       </div>
 
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {FILTERS.map(({ key, label }) => (
+        <button
+          type="button"
+          onClick={() => setActiveCategory(null)}
+          className={cn(
+            "shrink-0 rounded-full border px-4 py-1.5 text-xs font-medium transition",
+            activeCategory === null
+              ? "border-accent bg-accent text-accent-foreground"
+              : "border-border bg-card text-muted-foreground",
+          )}
+        >
+          Все
+        </button>
+        {categories.map((cat) => (
           <button
-            key={key}
+            key={cat.id}
             type="button"
-            onClick={() => setFilter(key)}
+            onClick={() => setActiveCategory(cat.id)}
             className={cn(
               "shrink-0 rounded-full border px-4 py-1.5 text-xs font-medium transition",
-              filter === key
+              activeCategory === cat.id
                 ? "border-accent bg-accent text-accent-foreground"
                 : "border-border bg-card text-muted-foreground",
             )}
           >
-            {label}
+            {cat.name}
           </button>
         ))}
       </div>
 
-      {loading ? (
+      {error ? (
+        <div className="flex flex-col items-center gap-3 py-16 text-center">
+          <p className="text-sm text-muted-foreground text-pretty">
+            Не удалось загрузить каталог. Проверьте соединение.
+          </p>
+          {onRetry && (
+            <button
+              type="button"
+              onClick={onRetry}
+              className="flex h-10 items-center justify-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground active:scale-[0.98]"
+            >
+              Повторить
+            </button>
+          )}
+        </div>
+      ) : loading ? (
         <div className="grid grid-cols-2 gap-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <ProductCardSkeleton key={i} />

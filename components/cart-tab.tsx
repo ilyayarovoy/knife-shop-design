@@ -61,16 +61,19 @@ export function CartTab({
             <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-secondary">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={product.image || "/placeholder.svg"}
-                alt={product.name}
+                src={product.images?.[0] || "/placeholder.svg"}
+                alt={product.title}
                 className="h-full w-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = "/placeholder.svg"
+                }}
               />
             </div>
 
             <div className="flex flex-1 flex-col">
               <div className="flex items-start justify-between gap-2">
                 <h3 className="text-sm font-semibold leading-tight">
-                  {product.name}
+                  {product.title}
                 </h3>
                 <button
                   type="button"

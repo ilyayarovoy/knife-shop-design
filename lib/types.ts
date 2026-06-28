@@ -1,17 +1,42 @@
-export type ProductCategory = "hunting" | "folding" | "kitchen"
-
-export interface Product {
+// Категория с бэкенда: GET /api/categories/all
+export interface Category {
   id: number
   name: string
   description: string
+  slug: string
+  created_at?: string
+}
+
+// Товар с бэкенда: GET /api/products/all, GET /api/products/{id}
+export interface Product {
+  id: number
+  category_id: number
+  title: string
+  description: string
   price: number
-  image: string
-  category: ProductCategory
+  stock: number
+  images: string[]
 }
 
 export interface CartItem {
   product: Product
   quantity: number
+}
+
+// Элемент корзины с бэкенда: GET /api/cart/user/{id}
+export interface ServerCartItem {
+  id: number
+  user_id: number
+  product_id: number
+  quantity: number
+  product: Product
+  created_at?: string
+}
+
+export interface ServerCart {
+  items: ServerCartItem[]
+  total_items: number
+  total_price: number
 }
 
 export interface Order {
@@ -28,10 +53,4 @@ export interface TelegramUser {
   lastName?: string
   username?: string
   photoUrl?: string
-}
-
-export const CATEGORY_LABELS: Record<ProductCategory, string> = {
-  hunting: "Охотничьи",
-  folding: "Складные",
-  kitchen: "Кухонные",
 }

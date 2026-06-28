@@ -1,41 +1,39 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
+import useSWR from "swr"
 import { AppHeader } from "@/components/app-header"
 import { CartTab } from "@/components/cart-tab"
 import { CatalogTab } from "@/components/catalog-tab"
+import { ProductDetail } from "@/components/product-detail"
 import { ProfileTab } from "@/components/profile-tab"
 import { TabBar, type TabKey } from "@/components/tab-bar"
-import { MOCK_PRODUCTS } from "@/lib/mock-data"
-import type { CartItem, Product } from "@/lib/types"
+import { apiKeys, fetcher } from "@/lib/api"
+import type { CartItem, Category, Product } from "@/lib/types"
 import { useTelegram } from "@/lib/use-telegram"
 
 export default function Page() {
   const { user } = useTelegram()
   const [tab, setTab] = useState<TabKey>("catalog")
 
-  // Каталог
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
+  // Каталог: товары и категории с бэкенда
+  const {
+    data: products = [],
+    isLoading: productsLoading,
+    error: productsError,
+    mutate: refetchProducts,
+  } = useSWR<Product[]>(apiKeys.products(), fetcher)
 
-  // Корзина: id -> количество
+  const { data: categories = [] } = useSWR<Category[]>(
+    apiKeys.categories(),
+    fetcher,
+  )
+
+  // Корзина: id -> количество (локальное состояние)
   const [cart, setCart] = useState<Record<number, number>>({})
 
-  useEffect(() => {
-    // Имитация загрузки с API: /api/products/all?skip=0&limit=100
-    // const res = await fetch("/api/products/all?skip=0&limit=100")
-    let active = true
-    const timer = setTimeout(() => {
-      if (active) {
-        setProducts(MOCK_PRODUCTS)
-        setLoading(false)
-      }
-    }, 1200)
-    return () => {
-      active = false
-      clearTimeout(timer)
-    }
-  }, [])
+  // Открытый товар для детального просмотра
+  const [openedProduct, setOpenedProduct] = useState<Product | null>(null)
 
   const getQuantity = useCallback((id: number) => cart[id] ?? 0, [cart])
 
@@ -68,9 +66,9 @@ export default function Page() {
     })
   }, [])
 
-  // Открытие детального просмотра: /api/products/{id}
+  // Открытие детального просмотра: ProductDetail догрузит /api/products/{id}
   const handleOpen = useCallback((product: Product) => {
-    console.log("[v0] Открыть детальный просмотр товара id:", product.id)
+    setOpenedProduct(product)
   }, [])
 
   const cartItems: CartItem[] = useMemo(() => {
@@ -90,15 +88,13 @@ export default function Page() {
   )
 
   const handleCheckout = useCallback(() => {
-    // Отправка заказа на API
-    console.log("[v0] Оформление заказа:", { user: user.id, items: cartItems })
     const tg = window.Telegram?.WebApp as
       | { sendData?: (data: string) => void }
       | undefined
     tg?.sendData?.(JSON.stringify({ items: cart, total: cartTotal }))
     setCart({})
     setTab("catalog")
-  }, [cart, cartItems, cartTotal, user.id])
+  }, [cart, cartTotal])
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-background pb-24">
@@ -108,7 +104,10 @@ export default function Page() {
         {tab === "catalog" && (
           <CatalogTab
             products={products}
-            loading={loading}
+            categories={categories}
+            loading={productsLoading}
+            error={Boolean(productsError)}
+            onRetry={() => refetchProducts()}
             getQuantity={getQuantity}
             onAdd={handleAdd}
             onIncrement={handleIncrement}
@@ -133,6 +132,15 @@ export default function Page() {
       </main>
 
       <TabBar active={tab} onChange={setTab} cartCount={cartCount} />
+
+      <ProductDetail
+        product={openedProduct}
+        quantity={openedProduct ? getQuantity(openedProduct.id) : 0}
+        onClose={() => setOpenedProduct(null)}
+        onAdd={handleAdd}
+        onIncrement={handleIncrement}
+        onDecrement={handleDecrement}
+      />
     </div>
   )
 }
