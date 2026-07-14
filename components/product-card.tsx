@@ -27,20 +27,28 @@ export function ProductCard({
         type="button"
         onClick={() => onOpen(product)}
         className="relative aspect-square w-full overflow-hidden bg-secondary"
-        aria-label={`Открыть ${product.name}`}
+        aria-label={`Открыть ${product.title}`}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={product.image || "/placeholder.svg"}
-          alt={product.name}
+          src={product.images?.[0] || "/placeholder.svg"}
+          alt={product.title}
           className="h-full w-full object-cover"
+          onError={(e) => {
+            e.currentTarget.src = "/placeholder.svg"
+          }}
         />
+        {product.stock <= 0 && (
+          <span className="absolute left-2 top-2 rounded-full bg-background/85 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground backdrop-blur">
+            Нет в наличии
+          </span>
+        )}
       </button>
 
       <div className="flex flex-1 flex-col gap-2 p-3">
         <div className="flex flex-col gap-0.5">
           <h3 className="text-sm font-semibold leading-tight text-balance">
-            {product.name}
+            {product.title}
           </h3>
           <p className="line-clamp-2 text-[11px] leading-snug text-muted-foreground">
             {product.description}

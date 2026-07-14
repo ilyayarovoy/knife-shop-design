@@ -7,6 +7,7 @@ import type { CartItem } from "@/lib/types"
 interface CartTabProps {
   items: CartItem[]
   total: number
+  loading?: boolean
   onIncrement: (id: number) => void
   onDecrement: (id: number) => void
   onRemove: (id: number) => void
@@ -17,12 +18,27 @@ interface CartTabProps {
 export function CartTab({
   items,
   total,
+  loading = false,
   onIncrement,
   onDecrement,
   onRemove,
   onCheckout,
   onGoCatalog,
 }: CartTabProps) {
+  if (loading && items.length === 0) {
+    return (
+      <div className="flex flex-col gap-3 px-4 pt-4">
+        <div className="h-6 w-24 animate-pulse rounded-md bg-card" />
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="h-[104px] animate-pulse rounded-2xl border border-border bg-card"
+          />
+        ))}
+      </div>
+    )
+  }
+
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 px-6 pt-24 text-center">
@@ -61,16 +77,19 @@ export function CartTab({
             <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-secondary">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={product.image || "/placeholder.svg"}
-                alt={product.name}
+                src={product.images?.[0] || "/placeholder.svg"}
+                alt={product.title}
                 className="h-full w-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = "/placeholder.svg"
+                }}
               />
             </div>
 
             <div className="flex flex-1 flex-col">
               <div className="flex items-start justify-between gap-2">
                 <h3 className="text-sm font-semibold leading-tight">
-                  {product.name}
+                  {product.title}
                 </h3>
                 <button
                   type="button"
