@@ -39,18 +39,21 @@ export interface ServerCart {
   total_price: number
 }
 
-export interface Order {
-  id: string
-  date: string
-  status: "delivered" | "in_transit"
-  total: number
-  itemsCount: number
-}
-
+// Данные пользователя из Telegram WebApp (initDataUnsafe.user)
 export interface TelegramUser {
-  id: number
+  id: number // это Telegram ID (tg_id), НЕ внутренний id в БД
   firstName: string
   lastName?: string
   username?: string
   photoUrl?: string
+}
+
+// Пользователь из нашей БД: GET /api/users/{tg_id}, POST /api/users
+export interface DbUser {
+  id: number // внутренний id, используется для корзины /api/cart/user/{id}
+  tg_id: number
+  username?: string | null
+  first_name?: string | null
+  last_name?: string | null
+  created_at?: string
 }

@@ -10,11 +10,12 @@ import { ProfileTab } from "@/components/profile-tab"
 import { TabBar, type TabKey } from "@/components/tab-bar"
 import { apiKeys, fetcher } from "@/lib/api"
 import type { Category, Product } from "@/lib/types"
+import { useAppUser } from "@/lib/use-app-user"
 import { useCart } from "@/lib/use-cart"
-import { useTelegram } from "@/lib/use-telegram"
 
 export default function Page() {
-  const { user } = useTelegram()
+  // tgUser — профиль из Telegram; dbUserId — внутренний id из БД для корзины
+  const { tgUser, dbUser, dbUserId } = useAppUser()
   const [tab, setTab] = useState<TabKey>("catalog")
 
   // Каталог: товары и категории с бэкенда
@@ -42,7 +43,7 @@ export default function Page() {
     decrementByProduct,
     removeByProduct,
     clear,
-  } = useCart(user?.id)
+  } = useCart(dbUserId)
 
   // Открытый товар для детального просмотра
   const [openedProduct, setOpenedProduct] = useState<Product | null>(null)
@@ -99,7 +100,7 @@ export default function Page() {
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-background pb-24">
-      <AppHeader user={user} />
+      <AppHeader user={tgUser} />
 
       <main className="flex-1">
         {tab === "catalog" && (
@@ -130,7 +131,7 @@ export default function Page() {
           />
         )}
 
-        {tab === "profile" && <ProfileTab user={user} />}
+        {tab === "profile" && <ProfileTab user={tgUser} dbUser={dbUser} />}
       </main>
 
       <TabBar active={tab} onChange={setTab} cartCount={totalItems} />

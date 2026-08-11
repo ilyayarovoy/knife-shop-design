@@ -1,7 +1,7 @@
 "use client"
 
 import { Minus, Plus } from "lucide-react"
-import { formatPrice } from "@/lib/mock-data"
+import { formatPrice } from "@/lib/utils"
 import type { Product } from "@/lib/types"
 
 interface ProductCardProps {

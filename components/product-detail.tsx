@@ -4,7 +4,7 @@ import { Minus, Plus, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import useSWR from "swr"
 import { apiKeys, fetcher } from "@/lib/api"
-import { formatPrice } from "@/lib/mock-data"
+import { formatPrice } from "@/lib/utils"
 import type { Product } from "@/lib/types"
 
 interface ProductDetailProps {
