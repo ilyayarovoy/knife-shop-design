@@ -39,14 +39,21 @@ export function useTelegram() {
   const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
-    const tg = window.Telegram?.WebApp
-    if (tg) {
-      tg.ready()
-      tg.expand()
-      tg.setHeaderColor?.("#0a0a0b")
-      tg.setBackgroundColor?.("#0a0a0b")
-      const tgUser = tg.initDataUnsafe?.user
-      if (tgUser) {
+    let cancelled = false
+    let attempts = 0
+
+    // SDK-скрипт может ещё не успеть загрузиться к моменту первого рендера,
+    // поэтому ждём появления window.Telegram.WebApp с несколькими попытками.
+    function init() {
+      const tg = window.Telegram?.WebApp
+      const tgUser = tg?.initDataUnsafe?.user
+
+      if (tg && tgUser) {
+        console.log("[v0] Telegram user detected:", tgUser.id, tgUser.username)
+        tg.ready()
+        tg.expand()
+        tg.setHeaderColor?.("#0a0a0b")
+        tg.setBackgroundColor?.("#0a0a0b")
         setUser({
           id: tgUser.id,
           firstName: tgUser.first_name,
@@ -54,9 +61,27 @@ export function useTelegram() {
           username: tgUser.username,
           photoUrl: tgUser.photo_url,
         })
+        setIsReady(true)
+        return
       }
+
+      // Ещё не готово — пробуем снова (до ~3 секунд)
+      if (attempts < 30 && !cancelled) {
+        attempts += 1
+        setTimeout(init, 100)
+        return
+      }
+
+      // Telegram так и не появился — значит запуск вне Telegram (превью в браузере)
+      console.log("[v0] Telegram WebApp not found, using fallback user")
+      setIsReady(true)
     }
-    setIsReady(true)
+
+    init()
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   return { user, isReady }

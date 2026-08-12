@@ -51,7 +51,7 @@ export default function RootLayout({
       className={`dark ${geistSans.variable} ${geistMono.variable} bg-background`}
     >
       <head>
-        <script src="https://telegram.org/js/telegram-web-app.js" async />
+        <script src="https://telegram.org/js/telegram-web-app.js" />
       </head>
       <body className="font-sans antialiased bg-background text-foreground">
         {children}
