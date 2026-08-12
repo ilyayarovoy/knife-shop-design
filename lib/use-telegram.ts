@@ -25,12 +25,13 @@ declare global {
   }
 }
 
-// Заглушка пользователя на случай запуска вне Telegram.
-// id=3 — существующий в БД тестовый пользователь, чтобы корзина работала в превью.
+// Заглушка пользователя на случай запуска вне Telegram (превью в браузере).
+// id — это tg_id существующего в БД тестового пользователя (@MAGA),
+// чтобы get-or-create нашёл его и корзина работала в превью.
 const FALLBACK_USER: TelegramUser = {
-  id: 3,
-  firstName: "Илья",
-  username: "ilya_craft",
+  id: 1672498629468,
+  firstName: "MAGA",
+  username: "MAGA",
 }
 
 export function useTelegram() {

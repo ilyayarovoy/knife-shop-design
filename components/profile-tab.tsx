@@ -1,17 +1,11 @@
 "use client"
 
-import {
-  ChevronRight,
-  Heart,
-  Info,
-  LifeBuoy,
-  Package,
-} from "lucide-react"
-import { formatPrice, MOCK_ORDERS } from "@/lib/mock-data"
-import type { Order, TelegramUser } from "@/lib/types"
+import { ChevronRight, Heart, Info, LifeBuoy, Package } from "lucide-react"
+import type { DbUser, TelegramUser } from "@/lib/types"
 
 interface ProfileTabProps {
   user: TelegramUser
+  dbUser?: DbUser
 }
 
 const MENU = [
@@ -21,25 +15,21 @@ const MENU = [
   { key: "about", label: "О нас", icon: Info },
 ]
 
-function StatusBadge({ status }: { status: Order["status"] }) {
-  const isDelivered = status === "delivered"
-  return (
-    <span
-      className={
-        "rounded-full px-2 py-0.5 text-[10px] font-semibold " +
-        (isDelivered
-          ? "bg-secondary text-muted-foreground"
-          : "bg-accent/15 text-accent")
-      }
-    >
-      {isDelivered ? "Доставлен" : "В пути"}
-    </span>
-  )
+function formatJoinDate(iso?: string): string | null {
+  if (!iso) return null
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return null
+  return new Intl.DateTimeFormat("ru-RU", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(date)
 }
 
-export function ProfileTab({ user }: ProfileTabProps) {
+export function ProfileTab({ user, dbUser }: ProfileTabProps) {
   const initials = user.firstName.charAt(0).toUpperCase()
   const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ")
+  const joinDate = formatJoinDate(dbUser?.created_at)
 
   return (
     <div className="flex flex-col gap-5 px-4 pt-4">
@@ -70,6 +60,27 @@ export function ProfileTab({ user }: ProfileTabProps) {
         </div>
       </div>
 
+      {/* Статус аккаунта в БД */}
+      <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3.5">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-sm font-medium">Аккаунт</span>
+          <span className="text-[11px] text-muted-foreground">
+            {dbUser
+              ? joinDate
+                ? `С нами с ${joinDate}`
+                : "Профиль синхронизирован"
+              : "Синхронизация профиля…"}
+          </span>
+        </div>
+        <span
+          className={
+            "h-2.5 w-2.5 rounded-full " +
+            (dbUser ? "bg-accent" : "bg-muted-foreground/40")
+          }
+          aria-hidden="true"
+        />
+      </div>
+
       {/* Меню */}
       <div className="overflow-hidden rounded-2xl border border-border bg-card">
         {MENU.map(({ key, label, icon: Icon }, i) => (
@@ -88,34 +99,6 @@ export function ProfileTab({ user }: ProfileTabProps) {
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </button>
         ))}
-      </div>
-
-      {/* История заказов */}
-      <div className="flex flex-col gap-3">
-        <h3 className="px-1 text-sm font-semibold">История заказов</h3>
-        <ul className="flex flex-col gap-3">
-          {MOCK_ORDERS.map((order) => (
-            <li
-              key={order.id}
-              className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold">№ {order.id}</span>
-                <StatusBadge status={order.status} />
-              </div>
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>{order.date}</span>
-                <span>{order.itemsCount} тов.</span>
-              </div>
-              <div className="flex items-center justify-between border-t border-border pt-2">
-                <span className="text-xs text-muted-foreground">Сумма</span>
-                <span className="text-sm font-bold tabular-nums">
-                  {formatPrice(order.total)}
-                </span>
-              </div>
-            </li>
-          ))}
-        </ul>
       </div>
     </div>
   )

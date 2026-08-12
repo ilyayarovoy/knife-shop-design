@@ -1,7 +1,7 @@
 "use client"
 
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react"
-import { formatPrice } from "@/lib/mock-data"
+import { formatPrice } from "@/lib/utils"
 import type { CartItem } from "@/lib/types"
 
 interface CartTabProps {

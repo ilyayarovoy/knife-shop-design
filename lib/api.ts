@@ -1,6 +1,6 @@
-import type { Category, Product, ServerCart } from "./types"
+import type { Category, DbUser, Product, ServerCart } from "./types"
 
-export const API_BASE = "https://ilyaaaaaaaaaaaaaa-shopy-knife-api.hf.space/api"
+export const API_BASE = "https://shopy-knife-1.onrender.com/api"
 
 export class ApiError extends Error {
   status: number
@@ -47,6 +47,43 @@ export function getProduct(id: number) {
 
 export function getCart(userId: number) {
   return fetcher<ServerCart>(apiKeys.cart(userId))
+}
+
+// --- Пользователи ---
+
+// GET /api/users/{tg_id} — поиск по Telegram ID
+export function getUserByTgId(tgId: number) {
+  return fetcher<DbUser>(`${API_BASE}/users/${tgId}`)
+}
+
+interface CreateUserPayload {
+  tg_id: number
+  username?: string | null
+  first_name?: string | null
+  last_name?: string | null
+}
+
+// Get-or-create: ищем пользователя по tg_id, при 404 — создаём и перечитываем.
+// Возвращает запись из БД с внутренним id (нужен для корзины).
+export async function getOrCreateUser(
+  payload: CreateUserPayload,
+): Promise<DbUser> {
+  const res = await fetch(`${API_BASE}/users/${payload.tg_id}`, {
+    headers: { Accept: "application/json" },
+  })
+
+  if (res.ok) {
+    return (await res.json()) as DbUser
+  }
+
+  if (res.status !== 404) {
+    throw new ApiError(`Ошибка запроса пользователя: ${res.status}`, res.status)
+  }
+
+  // Пользователя нет — регистрируем
+  await mutateRequest(`${API_BASE}/users`, "POST", payload)
+  // Перечитываем, чтобы гарантированно получить внутренний id
+  return getUserByTgId(payload.tg_id)
 }
 
 async function mutateRequest<T>(
