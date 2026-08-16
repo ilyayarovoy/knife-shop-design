@@ -16,9 +16,10 @@ export function useFavorites(userId: number | undefined) {
 
   const { data, isLoading, error, mutate } = useSWR<Product[]>(key, fetcher, {
     revalidateOnFocus: false,
+    shouldRetryOnError: true,
   })
 
-  const favorites = data ?? []
+  const favorites = Array.isArray(data) ? data : []
 
   const favoritesMap = useMemo(() => {
     return new Set(favorites.map((p) => p.id))
