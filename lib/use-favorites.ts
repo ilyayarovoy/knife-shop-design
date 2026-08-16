@@ -58,36 +58,42 @@ export function useFavorites(userId: number | undefined) {
       if (!userId) return
       const wasFavorite = isFavorite(product.id)
 
-      // Фильтруем по product_id, чтобы правильно удалить из optimisticItems
-      const optimisticItems = wasFavorite
-        ? favoriteItems.filter((item: any) => item.product_id !== product.id)
-        : [...favoriteItems, { product_id: product.id, product } as FavoriteItem]
+      if (wasFavorite) {
+        // При удалении используем оптимистичные данные
+        const optimisticItems = favoriteItems.filter((item: any) => item.product_id !== product.id)
+        const optimisticData = {
+          items: optimisticItems,
+          total_count: optimisticItems.length,
+        }
 
-      // Оптимистичные данные должны быть в том же формате, что API возвращает
-      const optimisticData = {
-        items: optimisticItems,
-        total_count: optimisticItems.length,
-      }
-
-      await mutate(
-        async () => {
-          if (wasFavorite) {
-            // Найти item.id для удаления (это ID favorite item, а не product_id)
+        await mutate(
+          async () => {
             const favoriteItem = favoriteItems.find((item: any) => item.product_id === product.id)
             if (favoriteItem) {
               await removeFromFavorites(userId, favoriteItem.id)
             }
-          } else {
+            return getFavorites(userId)
+          },
+          {
+            optimisticData,
+            rollbackOnError: true,
+            revalidate: false,
+          },
+        )
+      } else {
+        // При добавлении не используем оптимистичные данные, чтобы избежать мигания
+        // API вернёт полные данные, и они будут правильно отображены
+        await mutate(
+          async () => {
             await addToFavorites(userId, product.id)
-          }
-          return getFavorites(userId)
-        },
-        {
-          optimisticData,
-          rollbackOnError: true,
-          revalidate: false,
-        },
-      )
+            return getFavorites(userId)
+          },
+          {
+            rollbackOnError: true,
+            revalidate: false,
+          },
+        )
+      }
     },
     [userId, favoriteItems, isFavorite, mutate],
   )
