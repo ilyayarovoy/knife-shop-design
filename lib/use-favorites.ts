@@ -58,44 +58,43 @@ export function useFavorites(userId: number | undefined) {
       if (!userId) return
       const wasFavorite = isFavorite(product.id)
 
-      if (wasFavorite) {
-        // При удалении используем оптимистичные данные
-        const optimisticItems = favoriteItems.filter((item: any) => item.product_id !== product.id)
-        const optimisticData = {
-          items: optimisticItems,
-          total_count: optimisticItems.length,
-        }
+      // Оптимистично обновляем favorites сразу
+      const optimisticFavorites = wasFavorite
+        ? favorites.filter((p) => p.id !== product.id)
+        : [...favorites, product]
 
-        await mutate(
-          async () => {
+      // Оптимистичные данные в формате API
+      const optimisticData = {
+        items: optimisticFavorites.map((fav, idx) => ({
+          id: idx,
+          product_id: fav.id,
+          user_id: userId,
+          product: fav,
+          created_at: new Date().toISOString(),
+        })),
+        total_count: optimisticFavorites.length,
+      }
+
+      await mutate(
+        async () => {
+          if (wasFavorite) {
             const favoriteItem = favoriteItems.find((item: any) => item.product_id === product.id)
             if (favoriteItem) {
               await removeFromFavorites(userId, favoriteItem.id)
             }
-            return getFavorites(userId)
-          },
-          {
-            optimisticData,
-            rollbackOnError: true,
-            revalidate: false,
-          },
-        )
-      } else {
-        // При добавлении не используем оптимистичные данные, чтобы избежать мигания
-        // API вернёт полные данные, и они будут правильно отображены
-        await mutate(
-          async () => {
+          } else {
             await addToFavorites(userId, product.id)
-            return getFavorites(userId)
-          },
-          {
-            rollbackOnError: true,
-            revalidate: false,
-          },
-        )
-      }
+          }
+          return getFavorites(userId)
+        },
+        {
+          optimisticData,
+          rollbackOnError: true,
+          revalidate: false,
+        },
+      )
     },
-    [userId, favoriteItems, isFavorite, mutate],
+    [userId, favorites, favoriteItems, isFavorite, mutate],
   )
 
   const add = useCallback(
