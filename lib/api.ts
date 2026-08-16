@@ -30,6 +30,9 @@ export const apiKeys = {
     `${API_BASE}/products/all?skip=${skip}&limit=${limit}`,
   product: (id: number) => `${API_BASE}/products/${id}`,
   cart: (userId: number) => `${API_BASE}/cart/user/${userId}`,
+  favorites: (userId: number) => `${API_BASE}/favorites/user/${userId}`,
+  favorite: (userId: number, productId: number) =>
+    `${API_BASE}/favorites/user/${userId}/check/${productId}`,
 }
 
 // Прямые вызовы (если нужны вне SWR)
@@ -137,4 +140,31 @@ export function removeCartItem(userId: number, itemId: number) {
 // DELETE /api/cart/user/{userId}/clear
 export function clearCart(userId: number) {
   return mutateRequest(`${API_BASE}/cart/user/${userId}/clear`, "DELETE")
+}
+
+// --- Избранное ---
+
+// GET /api/favorites/user/{userId}
+export function getFavorites(userId: number) {
+  return fetcher<Product[]>(`${API_BASE}/favorites/user/${userId}`)
+}
+
+// POST /api/favorites/user/{userId}/add
+export function addToFavorites(userId: number, productId: number) {
+  return mutateRequest(`${API_BASE}/favorites/user/${userId}/add`, "POST", {
+    product_id: productId,
+  })
+}
+
+// DELETE /api/favorites/user/{userId}/item/{productId}
+export function removeFromFavorites(userId: number, productId: number) {
+  return mutateRequest(
+    `${API_BASE}/favorites/user/${userId}/item/${productId}`,
+    "DELETE",
+  )
+}
+
+// GET /api/favorites/user/{userId}/check/{productId}
+export function checkFavorite(userId: number, productId: number) {
+  return fetcher<boolean>(`${API_BASE}/favorites/user/${userId}/check/${productId}`)
 }

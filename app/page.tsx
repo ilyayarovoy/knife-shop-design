@@ -5,6 +5,7 @@ import useSWR from "swr"
 import { AppHeader } from "@/components/app-header"
 import { CartTab } from "@/components/cart-tab"
 import { CatalogTab } from "@/components/catalog-tab"
+import { FavoritesTab } from "@/components/favorites-tab"
 import { ProductDetail } from "@/components/product-detail"
 import { ProfileTab } from "@/components/profile-tab"
 import { TabBar, type TabKey } from "@/components/tab-bar"
@@ -12,6 +13,7 @@ import { apiKeys, fetcher } from "@/lib/api"
 import type { Category, Product } from "@/lib/types"
 import { useAppUser } from "@/lib/use-app-user"
 import { useCart } from "@/lib/use-cart"
+import { useFavorites } from "@/lib/use-favorites"
 
 export default function Page() {
   // tgUser — профиль из Telegram; dbUserId — внутренний id из БД для корзины
@@ -45,6 +47,14 @@ export default function Page() {
     clear,
   } = useCart(dbUserId)
 
+  // Избранное с бэкенда (GET/POST/DELETE /api/favorites/...)
+  const {
+    favorites,
+    isLoading: favoritesLoading,
+    isFavorite,
+    toggle: toggleFavorite,
+  } = useFavorites(dbUserId)
+
   // Открытый товар для детального просмотра
   const [openedProduct, setOpenedProduct] = useState<Product | null>(null)
 
@@ -74,6 +84,13 @@ export default function Page() {
       void removeByProduct(id)
     },
     [removeByProduct],
+  )
+
+  const handleToggleFavorite = useCallback(
+    (product: Product) => {
+      void toggleFavorite(product)
+    },
+    [toggleFavorite],
   )
 
   // Открытие детального просмотра: ProductDetail догрузит /api/products/{id}
@@ -111,6 +128,22 @@ export default function Page() {
             error={Boolean(productsError)}
             onRetry={() => refetchProducts()}
             getQuantity={getQuantity}
+            isFavorite={isFavorite}
+            onToggleFavorite={handleToggleFavorite}
+            onAdd={handleAdd}
+            onIncrement={handleIncrement}
+            onDecrement={handleDecrement}
+            onOpen={handleOpen}
+          />
+        )}
+
+        {tab === "favorites" && (
+          <FavoritesTab
+            favorites={favorites}
+            loading={favoritesLoading}
+            getQuantity={getQuantity}
+            isFavorite={isFavorite}
+            onToggleFavorite={handleToggleFavorite}
             onAdd={handleAdd}
             onIncrement={handleIncrement}
             onDecrement={handleDecrement}
@@ -134,7 +167,7 @@ export default function Page() {
         {tab === "profile" && <ProfileTab user={tgUser} dbUser={dbUser} />}
       </main>
 
-      <TabBar active={tab} onChange={setTab} cartCount={totalItems} />
+      <TabBar active={tab} onChange={setTab} cartCount={totalItems} favoritesCount={favorites.length} />
 
       <ProductDetail
         product={openedProduct}

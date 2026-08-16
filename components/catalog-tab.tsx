@@ -13,6 +13,8 @@ interface CatalogTabProps {
   error?: boolean
   onRetry?: () => void
   getQuantity: (id: number) => number
+  isFavorite?: (id: number) => boolean
+  onToggleFavorite?: (product: Product) => void
   onAdd: (product: Product) => void
   onIncrement: (id: number) => void
   onDecrement: (id: number) => void
@@ -26,6 +28,8 @@ export function CatalogTab({
   error,
   onRetry,
   getQuantity,
+  isFavorite = () => false,
+  onToggleFavorite,
   onAdd,
   onIncrement,
   onDecrement,
@@ -122,6 +126,8 @@ export function CatalogTab({
               key={product.id}
               product={product}
               quantity={getQuantity(product.id)}
+              isFavorite={isFavorite(product.id)}
+              onToggleFavorite={onToggleFavorite}
               onAdd={onAdd}
               onIncrement={onIncrement}
               onDecrement={onDecrement}

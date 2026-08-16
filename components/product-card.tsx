@@ -1,12 +1,15 @@
 "use client"
 
-import { Minus, Plus } from "lucide-react"
+import { Heart, Minus, Plus } from "lucide-react"
 import { formatPrice } from "@/lib/utils"
 import type { Product } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
 interface ProductCardProps {
   product: Product
   quantity: number
+  isFavorite?: boolean
+  onToggleFavorite?: (product: Product) => void
   onAdd: (product: Product) => void
   onIncrement: (id: number) => void
   onDecrement: (id: number) => void
@@ -16,6 +19,8 @@ interface ProductCardProps {
 export function ProductCard({
   product,
   quantity,
+  isFavorite = false,
+  onToggleFavorite,
   onAdd,
   onIncrement,
   onDecrement,
@@ -42,6 +47,21 @@ export function ProductCard({
           <span className="absolute left-2 top-2 rounded-full bg-background/85 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground backdrop-blur">
             Нет в наличии
           </span>
+        )}
+        {onToggleFavorite && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onToggleFavorite(product)
+            }}
+            className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-background/85 backdrop-blur transition active:scale-90"
+            aria-label={isFavorite ? "Удалить из избранного" : "Добавить в избранное"}
+          >
+            <Heart
+              className={cn("h-5 w-5", isFavorite ? "fill-red-500 text-red-500" : "text-muted-foreground")}
+            />
+          </button>
         )}
       </button>
 
