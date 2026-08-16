@@ -181,7 +181,7 @@ export default function Page() {
           />
         )}
 
-        {tab === "profile" && <ProfileTab user={tgUser} dbUser={dbUser} />}
+        {tab === "profile" && <ProfileTab user={tgUser} dbUser={dbUser} onNavigate={setTab} />}
       </main>
 
       <TabBar active={tab} onChange={setTab} cartCount={totalItems} favoritesCount={favorites.length} />

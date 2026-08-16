@@ -6,6 +6,7 @@ import type { DbUser, TelegramUser } from "@/lib/types"
 interface ProfileTabProps {
   user: TelegramUser
   dbUser?: DbUser
+  onNavigate?: (tab: string) => void
 }
 
 const MENU = [
@@ -26,10 +27,16 @@ function formatJoinDate(iso?: string): string | null {
   }).format(date)
 }
 
-export function ProfileTab({ user, dbUser }: ProfileTabProps) {
+export function ProfileTab({ user, dbUser, onNavigate }: ProfileTabProps) {
   const initials = user.firstName.charAt(0).toUpperCase()
   const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ")
   const joinDate = formatJoinDate(dbUser?.created_at)
+
+  const handleMenuClick = (key: string) => {
+    if (key === "favorites" && onNavigate) {
+      onNavigate("favorites")
+    }
+  }
 
   return (
     <div className="flex flex-col gap-5 px-4 pt-4">
@@ -87,6 +94,7 @@ export function ProfileTab({ user, dbUser }: ProfileTabProps) {
           <button
             key={key}
             type="button"
+            onClick={() => handleMenuClick(key)}
             className={
               "flex w-full items-center gap-3 px-4 py-3.5 text-left transition active:bg-secondary " +
               (i !== MENU.length - 1 ? "border-b border-border" : "")
