@@ -17,7 +17,7 @@ import { useFavorites } from "@/lib/use-favorites"
 
 export default function Page() {
   // tgUser — профиль из Telegram; dbUserId — внутренний id из БД для корзины
-  const { tgUser, dbUser, dbUserId } = useAppUser()
+  const { tgUser, dbUser, dbUserId, isReady, error: userError } = useAppUser()
   const [tab, setTab] = useState<TabKey>("catalog")
 
   // Каталог: товары и категории с бэкенда
@@ -32,6 +32,23 @@ export default function Page() {
     apiKeys.categories(),
     fetcher,
   )
+
+  if (userError) {
+    return (
+      <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-4 bg-background px-4 text-center">
+        <p className="text-sm text-muted-foreground">
+          Не удалось загрузить профиль пользователя
+        </p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="flex h-10 items-center justify-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground active:scale-[0.98]"
+        >
+          Перезагрузить
+        </button>
+      </div>
+    )
+  }
 
   // Корзина с бэкенда (GET/POST/PUT/DELETE /api/cart/...)
   const {

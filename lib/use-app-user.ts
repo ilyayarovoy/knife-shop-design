@@ -37,7 +37,13 @@ export function useAppUser(): UseAppUser {
         first_name: user.firstName ?? null,
         last_name: user.lastName ?? null,
       }),
-    { revalidateOnFocus: false, shouldRetryOnError: false },
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: true,
+      onError: (err) => {
+        console.error("[useAppUser] Failed to load user:", err)
+      }
+    },
   )
 
   return {
