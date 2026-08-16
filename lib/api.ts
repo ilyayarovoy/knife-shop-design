@@ -89,6 +89,12 @@ export async function getOrCreateUser(
   return getUserByTgId(payload.tg_id)
 }
 
+// Универсальный помощник для POST/PUT/DELETE.
+// ВАЖНО: DELETE (и некоторые PUT/POST) могут отвечать без тела (204 No Content).
+// Раньше здесь всегда стоял res.json(), который на пустом теле кидал
+// "Unexpected end of JSON input" — SWR ловил это как ошибку мутации и откатывал
+// оптимистичное обновление, из-за чего удалённый товар "на секунду" исчезал
+// и тут же возвращался обратно в UI, хотя на бэкенде уже был удалён.
 async function mutateRequest<T>(
   url: string,
   method: "POST" | "PUT" | "DELETE",
@@ -105,7 +111,18 @@ async function mutateRequest<T>(
   if (!res.ok) {
     throw new ApiError(`Ошибка запроса: ${res.status}`, res.status)
   }
-  return (await res.json()) as T
+
+  // Нет содержимого — не пытаемся парсить JSON
+  if (res.status === 204) {
+    return undefined as T
+  }
+
+  const text = await res.text()
+  if (!text) {
+    return undefined as T
+  }
+
+  return JSON.parse(text) as T
 }
 
 // POST /api/cart/user/{userId}/add
