@@ -161,10 +161,10 @@ export function addToFavorites(userId: number, productId: number) {
   })
 }
 
-// DELETE /api/favorites/user/{userId}/item/{productId}
-export function removeFromFavorites(userId: number, productId: number) {
+// DELETE /api/favorites/user/{userId}/item/{itemId}
+export function removeFromFavorites(userId: number, itemId: number) {
   return mutateRequest(
-    `${API_BASE}/favorites/user/${userId}/item/${productId}`,
+    `${API_BASE}/favorites/user/${userId}/item/${itemId}`,
     "DELETE",
   )
 }

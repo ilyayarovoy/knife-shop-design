@@ -58,7 +58,11 @@ export function useFavorites(userId: number | undefined) {
       await mutate(
         async () => {
           if (wasFavorite) {
-            await removeFromFavorites(userId, product.id)
+            // Найти item.id для удаления (это ID favorite item, а не product_id)
+            const favoriteItem = data?.items?.find((item: any) => item.product_id === product.id)
+            if (favoriteItem) {
+              await removeFromFavorites(userId, favoriteItem.id)
+            }
           } else {
             await addToFavorites(userId, product.id)
           }
@@ -71,7 +75,7 @@ export function useFavorites(userId: number | undefined) {
         },
       )
     },
-    [userId, favorites, isFavorite, mutate],
+    [userId, favorites, isFavorite, mutate, data],
   )
 
   const add = useCallback(
