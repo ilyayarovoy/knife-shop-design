@@ -22,8 +22,8 @@ interface CatalogTabProps {
 }
 
 export function CatalogTab({
-  products,
-  categories,
+  products = [],
+  categories = [],
   loading,
   error,
   onRetry,
