@@ -6,7 +6,6 @@ import {
   addToFavorites,
   apiKeys,
   fetcher,
-  getFavorites,
   removeFromFavorites,
 } from "./api"
 import type { Product } from "./types"
@@ -16,7 +15,6 @@ export function useFavorites(userId: number | undefined) {
 
   const { data, isLoading, error, mutate } = useSWR<Product[]>(key, fetcher, {
     revalidateOnFocus: false,
-    shouldRetryOnError: true,
   })
 
   const favorites = Array.isArray(data) ? data : []
@@ -46,8 +44,7 @@ export function useFavorites(userId: number | undefined) {
           } else {
             await addToFavorites(userId, product.id)
           }
-          // Перечитываем с бэкенда, чтобы состояние синхронизировалось
-          return getFavorites(userId)
+          return optimisticFavorites
         },
         {
           optimisticData: optimisticFavorites,
