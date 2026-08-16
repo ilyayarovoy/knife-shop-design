@@ -44,9 +44,15 @@ export function useFavorites(userId: number | undefined) {
       if (!userId) return
       const wasFavorite = isFavorite(product.id)
 
-      const optimisticFavorites = wasFavorite
+      const optimisticItems = wasFavorite
         ? favorites.filter((p) => p.id !== product.id)
         : [...favorites, product]
+
+      // Оптимистичные данные должны быть в том же формате, что API возвращает
+      const optimisticData = {
+        items: optimisticItems,
+        total_count: optimisticItems.length,
+      }
 
       await mutate(
         async () => {
@@ -58,7 +64,7 @@ export function useFavorites(userId: number | undefined) {
           return getFavorites(userId)
         },
         {
-          optimisticData: optimisticFavorites,
+          optimisticData,
           rollbackOnError: true,
           revalidate: false,
         },
