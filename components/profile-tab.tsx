@@ -1,13 +1,18 @@
 "use client"
 
-import { ChevronRight, Heart, Info, LifeBuoy, Package } from "lucide-react"
+import { ChevronRight, Flame, Hammer, Heart, Info, LifeBuoy, Package, Send, ShieldCheck } from "lucide-react"
+import { useState } from "react"
 import type { DbUser, TelegramUser } from "@/lib/types"
+import { InfoSheet } from "./info-sheet"
 
 interface ProfileTabProps {
   user: TelegramUser
   dbUser?: DbUser
   onNavigate?: (tab: string) => void
 }
+
+const SUPPORT_TELEGRAM = "Avarde808"
+const SUPPORT_URL = `https://t.me/${SUPPORT_TELEGRAM}`
 
 const MENU = [
   { key: "orders", label: "Мои заказы", icon: Package },
@@ -27,7 +32,23 @@ function formatJoinDate(iso?: string): string | null {
   }).format(date)
 }
 
+// Открывает чат с поддержкой: внутри Telegram Mini App — через нативный
+// openTelegramLink (не выкидывает из приложения), в браузере — обычной вкладкой.
+function openSupportChat() {
+  const tg = window.Telegram?.WebApp as
+    | { openTelegramLink?: (url: string) => void }
+    | undefined
+
+  if (tg?.openTelegramLink) {
+    tg.openTelegramLink(SUPPORT_URL)
+  } else {
+    window.open(SUPPORT_URL, "_blank", "noopener,noreferrer")
+  }
+}
+
 export function ProfileTab({ user, dbUser, onNavigate }: ProfileTabProps) {
+  const [aboutOpen, setAboutOpen] = useState(false)
+
   const initials = user.firstName.charAt(0).toUpperCase()
   const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ")
   const joinDate = formatJoinDate(dbUser?.created_at)
@@ -35,6 +56,12 @@ export function ProfileTab({ user, dbUser, onNavigate }: ProfileTabProps) {
   const handleMenuClick = (key: string) => {
     if (key === "favorites" && onNavigate) {
       onNavigate("favorites")
+    }
+    if (key === "support") {
+      openSupportChat()
+    }
+    if (key === "about") {
+      setAboutOpen(true)
     }
   }
 
@@ -108,6 +135,74 @@ export function ProfileTab({ user, dbUser, onNavigate }: ProfileTabProps) {
           </button>
         ))}
       </div>
+
+      {/* Шторка "О нас" */}
+      <InfoSheet
+        open={aboutOpen}
+        title="О нас"
+        onClose={() => setAboutOpen(false)}
+      >
+        <div className="flex flex-col gap-5">
+          <p className="text-sm leading-relaxed text-muted-foreground text-pretty">
+            «Кузница» — небольшая мастерская крафтовых ножей ручной работы.
+            Мы не перепродаём чужие изделия: каждый нож проходит через наши
+            руки от куска стали до готового клинка.
+          </p>
+
+          <div className="flex flex-col gap-3">
+            <div className="flex items-start gap-3 rounded-2xl border border-border bg-card p-3.5">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-secondary">
+                <Flame className="h-5 w-5 text-accent" />
+              </span>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-sm font-semibold">Куём сами</span>
+                <span className="text-[13px] leading-snug text-muted-foreground">
+                  Ковка, закалка и заточка — весь цикл производства у нас в
+                  мастерской, без посредников.
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 rounded-2xl border border-border bg-card p-3.5">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-secondary">
+                <Hammer className="h-5 w-5 text-accent" />
+              </span>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-sm font-semibold">Ручная работа</span>
+                <span className="text-[13px] leading-snug text-muted-foreground">
+                  Каждый нож уникален: без конвейера и массового
+                  производства.
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 rounded-2xl border border-border bg-card p-3.5">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-secondary">
+                <ShieldCheck className="h-5 w-5 text-accent" />
+              </span>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-sm font-semibold">Гарантия качества</span>
+                <span className="text-[13px] leading-snug text-muted-foreground">
+                  Проверяем каждый клинок перед отправкой — на баланс,
+                  заточку и качество сборки.
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setAboutOpen(false)
+              openSupportChat()
+            }}
+            className="flex h-12 items-center justify-center gap-2 rounded-xl bg-accent text-sm font-bold text-accent-foreground transition active:scale-[0.98]"
+          >
+            <Send className="h-4 w-4" />
+            Написать нам в Telegram
+          </button>
+        </div>
+      </InfoSheet>
     </div>
   )
 }

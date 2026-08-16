@@ -30,8 +30,8 @@ export function useCart(userId: number | undefined) {
     revalidateOnFocus: false,
   })
 
-  const cart = data ?? EMPTY_CART
-  const items = cart.items
+  const cart = data && typeof data === "object" && !Array.isArray(data) ? data : EMPTY_CART
+  const items = Array.isArray(cart.items) ? cart.items : []
 
   const cartItems: CartItem[] = useMemo(
     () => items.map((i) => ({ product: i.product, quantity: i.quantity })),

@@ -22,16 +22,20 @@ export default function Page() {
 
   // Каталог: товары и категории с бэкенда
   const {
-    data: products = [],
+    data: productsData,
     isLoading: productsLoading,
     error: productsError,
     mutate: refetchProducts,
   } = useSWR<Product[]>(apiKeys.products(), fetcher)
 
-  const { data: categories = [] } = useSWR<Category[]>(
+  const products = Array.isArray(productsData) ? productsData : []
+
+  const { data: categoriesData } = useSWR<Category[]>(
     apiKeys.categories(),
     fetcher,
   )
+
+  const categories = Array.isArray(categoriesData) ? categoriesData : []
 
   if (userError) {
     return (
