@@ -75,10 +75,13 @@ export function useFavorites(userId: number | undefined) {
             if (favoriteItem) {
               await removeFromFavorites(userId, favoriteItem.id)
             }
+            // Возвращаем оптимистичные данные после удаления, не перечитываем с сервера
+            return optimisticData
           } else {
             await addToFavorites(userId, product.id)
+            // При добавлении перечитываем, чтобы получить реальный id
+            return getFavorites(userId)
           }
-          return getFavorites(userId)
         },
         {
           optimisticData,
