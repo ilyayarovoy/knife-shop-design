@@ -46,7 +46,7 @@ export function useFavorites(userId: number | undefined) {
           } else {
             await addToFavorites(userId, product.id)
           }
-          return getFavorites(userId)
+          return optimisticFavorites
         },
         {
           optimisticData: optimisticFavorites,
