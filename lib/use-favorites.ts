@@ -58,21 +58,14 @@ export function useFavorites(userId: number | undefined) {
       if (!userId) return
       const wasFavorite = isFavorite(product.id)
 
-      // Оптимистично обновляем favorites сразу
-      const optimisticFavorites = wasFavorite
-        ? favorites.filter((p) => p.id !== product.id)
-        : [...favorites, product]
+      // Оптимистичные данные - просто фильтруем существующие items
+      const optimisticItems = wasFavorite
+        ? favoriteItems.filter((item: any) => item.product_id !== product.id)
+        : favoriteItems
 
-      // Оптимистичные данные в формате API
       const optimisticData = {
-        items: optimisticFavorites.map((fav, idx) => ({
-          id: idx,
-          product_id: fav.id,
-          user_id: userId,
-          product: fav,
-          created_at: new Date().toISOString(),
-        })),
-        total_count: optimisticFavorites.length,
+        items: optimisticItems,
+        total_count: optimisticItems.length,
       }
 
       await mutate(
@@ -94,7 +87,7 @@ export function useFavorites(userId: number | undefined) {
         },
       )
     },
-    [userId, favorites, favoriteItems, isFavorite, mutate],
+    [userId, favoriteItems, isFavorite, mutate],
   )
 
   const add = useCallback(
