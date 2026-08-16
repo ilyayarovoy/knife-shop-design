@@ -11,6 +11,14 @@ import {
 } from "./api"
 import type { Product } from "./types"
 
+interface FavoriteItem {
+  id: number
+  user_id: number
+  product_id: number
+  product: Product
+  created_at: string
+}
+
 export function useFavorites(userId: number | undefined) {
   const key = userId ? apiKeys.favorites(userId) : null
 
@@ -21,15 +29,20 @@ export function useFavorites(userId: number | undefined) {
     }
   })
 
-  const favorites = useMemo(() => {
+  // Сохраняем полные данные items с id для удаления
+  const favoriteItems = useMemo(() => {
     if (!data) return []
     if (Array.isArray(data)) return data
     if (typeof data === "object" && "items" in data && Array.isArray(data.items)) {
-      // API возвращает {items: ServerFavoriteItem[]}, нужно извлечь product из каждого item
-      return data.items.map((item: any) => item.product || item).filter(Boolean)
+      return data.items
     }
     return []
   }, [data])
+
+  // Извлекаем только products для отображения
+  const favorites = useMemo(() => {
+    return favoriteItems.map((item: any) => item.product || item).filter(Boolean)
+  }, [favoriteItems])
 
   const favoritesMap = useMemo(() => {
     return new Set(favorites.map((p) => p.id))
@@ -45,9 +58,10 @@ export function useFavorites(userId: number | undefined) {
       if (!userId) return
       const wasFavorite = isFavorite(product.id)
 
+      // Фильтруем по product_id, чтобы правильно удалить из optimisticItems
       const optimisticItems = wasFavorite
-        ? favorites.filter((p) => p.id !== product.id)
-        : [...favorites, product]
+        ? favoriteItems.filter((item: any) => item.product_id !== product.id)
+        : [...favoriteItems, { product_id: product.id, product } as FavoriteItem]
 
       // Оптимистичные данные должны быть в том же формате, что API возвращает
       const optimisticData = {
@@ -59,7 +73,7 @@ export function useFavorites(userId: number | undefined) {
         async () => {
           if (wasFavorite) {
             // Найти item.id для удаления (это ID favorite item, а не product_id)
-            const favoriteItem = data?.items?.find((item: any) => item.product_id === product.id)
+            const favoriteItem = favoriteItems.find((item: any) => item.product_id === product.id)
             if (favoriteItem) {
               await removeFromFavorites(userId, favoriteItem.id)
             }
@@ -75,7 +89,7 @@ export function useFavorites(userId: number | undefined) {
         },
       )
     },
-    [userId, favorites, isFavorite, mutate, data],
+    [userId, favoriteItems, isFavorite, mutate],
   )
 
   const add = useCallback(
