@@ -46,7 +46,8 @@ export function useFavorites(userId: number | undefined) {
           } else {
             await addToFavorites(userId, product.id)
           }
-          return optimisticFavorites
+          // Перечитываем с бэкенда, чтобы состояние синхронизировалось
+          return getFavorites(userId)
         },
         {
           optimisticData: optimisticFavorites,
