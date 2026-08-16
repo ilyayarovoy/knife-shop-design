@@ -25,7 +25,8 @@ export function useFavorites(userId: number | undefined) {
     if (!data) return []
     if (Array.isArray(data)) return data
     if (typeof data === "object" && "items" in data && Array.isArray(data.items)) {
-      return data.items
+      // API возвращает {items: ServerFavoriteItem[]}, нужно извлечь product из каждого item
+      return data.items.map((item: any) => item.product || item).filter(Boolean)
     }
     return []
   }, [data])
