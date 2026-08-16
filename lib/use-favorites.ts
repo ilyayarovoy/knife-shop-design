@@ -6,6 +6,7 @@ import {
   addToFavorites,
   apiKeys,
   fetcher,
+  getFavorites,
   removeFromFavorites,
 } from "./api"
 import type { Product } from "./types"
@@ -44,7 +45,7 @@ export function useFavorites(userId: number | undefined) {
           } else {
             await addToFavorites(userId, product.id)
           }
-          return optimisticFavorites
+          return getFavorites(userId)
         },
         {
           optimisticData: optimisticFavorites,
