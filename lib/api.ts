@@ -144,9 +144,14 @@ export function clearCart(userId: number) {
 
 // --- Избранное ---
 
+interface FavoritesResponse {
+  items?: Product[]
+  total_count?: number
+}
+
 // GET /api/favorites/user/{userId}
 export function getFavorites(userId: number) {
-  return fetcher<Product[]>(`${API_BASE}/favorites/user/${userId}`)
+  return fetcher<FavoritesResponse | Product[]>(`${API_BASE}/favorites/user/${userId}`)
 }
 
 // POST /api/favorites/user/{userId}/add

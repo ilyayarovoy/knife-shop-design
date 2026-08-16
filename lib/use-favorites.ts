@@ -14,11 +14,21 @@ import type { Product } from "./types"
 export function useFavorites(userId: number | undefined) {
   const key = userId ? apiKeys.favorites(userId) : null
 
-  const { data, isLoading, error, mutate } = useSWR<Product[]>(key, fetcher, {
+  const { data, isLoading, error, mutate } = useSWR(key, fetcher, {
     revalidateOnFocus: false,
+    onError: (err) => {
+      console.error("[useFavorites] Failed to load favorites for user", userId, ":", err)
+    }
   })
 
-  const favorites = Array.isArray(data) ? data : []
+  const favorites = useMemo(() => {
+    if (!data) return []
+    if (Array.isArray(data)) return data
+    if (typeof data === "object" && "items" in data && Array.isArray(data.items)) {
+      return data.items
+    }
+    return []
+  }, [data])
 
   const favoritesMap = useMemo(() => {
     return new Set(favorites.map((p) => p.id))
