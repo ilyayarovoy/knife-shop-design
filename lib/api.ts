@@ -33,6 +33,8 @@ export const apiKeys = {
   favorites: (userId: number) => `${API_BASE}/favorites/user/${userId}`,
   favorite: (userId: number, productId: number) =>
     `${API_BASE}/favorites/user/${userId}/check/${productId}`,
+  orders: (userId: number) => `${API_BASE}/orders/user/${userId}`,
+  order: (orderId: number) => `${API_BASE}/orders/${orderId}`,
 }
 
 // Прямые вызовы (если нужны вне SWR)
@@ -189,4 +191,37 @@ export function removeFromFavorites(userId: number, itemId: number) {
 // GET /api/favorites/user/{userId}/check/{productId}
 export function checkFavorite(userId: number, productId: number) {
   return fetcher<boolean>(`${API_BASE}/favorites/user/${userId}/check/${productId}`)
+}
+
+// --- Заказы ---
+
+// POST /api/orders/user/{userId}/checkout
+export function createOrder(userId: number) {
+  return mutateRequest<{ order_id: number; message: string }>(
+    `${API_BASE}/orders/user/${userId}/checkout`,
+    "POST",
+  )
+}
+
+// GET /api/orders/user/{userId}
+export function getUserOrders(userId: number) {
+  return fetcher<import("./types").Order[]>(apiKeys.orders(userId))
+}
+
+// GET /api/orders/{orderId}
+export function getOrder(orderId: number) {
+  return fetcher<import("./types").OrderWithItems>(apiKeys.order(orderId))
+}
+
+// PUT /api/orders/{orderId}/user/{userId}/status
+export function updateOrderStatus(
+  orderId: number,
+  userId: number,
+  status: "new" | "done",
+) {
+  return mutateRequest(
+    `${API_BASE}/orders/${orderId}/user/${userId}/status`,
+    "PUT",
+    { status },
+  )
 }

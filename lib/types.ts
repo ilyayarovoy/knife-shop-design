@@ -57,3 +57,29 @@ export interface DbUser {
   last_name?: string | null
   created_at?: string
 }
+
+// Заказ: GET /api/orders/{id}, GET /api/orders/user/{userId}
+export interface Order {
+  id: number
+  user_id: number
+  status: "new" | "done"
+  total_price: number
+  created_at: string
+  updated_at?: string
+}
+
+// Элемент заказа
+export interface OrderItem {
+  id: number
+  order_id: number
+  product_id: number
+  quantity: number
+  price: number
+  product?: Product
+  created_at?: string
+}
+
+// Полный заказ с элементами
+export interface OrderWithItems extends Order {
+  items: OrderItem[]
+}
