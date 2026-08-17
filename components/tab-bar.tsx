@@ -3,31 +3,29 @@
 import { Heart, LayoutGrid, Package, ShoppingBag, User } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-export type TabKey = "catalog" | "favorites" | "cart" | "orders" | "profile"
+export type TabKey = "catalog" | "favorites" | "cart" | "profile"
 
 interface TabBarProps {
   active: TabKey
   onChange: (tab: TabKey) => void
   cartCount: number
   favoritesCount: number
-  ordersCount?: number
 }
 
 const TABS: { key: TabKey; label: string; icon: typeof LayoutGrid }[] = [
   { key: "catalog", label: "Каталог", icon: LayoutGrid },
   { key: "favorites", label: "Избранное", icon: Heart },
   { key: "cart", label: "Корзина", icon: ShoppingBag },
-  { key: "orders", label: "Заказы", icon: Package },
   { key: "profile", label: "Профиль", icon: User },
 ]
 
-export function TabBar({ active, onChange, cartCount, favoritesCount, ordersCount = 0 }: TabBarProps) {
+export function TabBar({ active, onChange, cartCount, favoritesCount }: TabBarProps) {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-md items-stretch justify-around px-2 pb-[env(safe-area-inset-bottom)] pt-2">
         {TABS.map(({ key, label, icon: Icon }) => {
           const isActive = active === key
-          const count = key === "cart" ? cartCount : key === "favorites" ? favoritesCount : key === "orders" ? ordersCount : 0
+          const count = key === "cart" ? cartCount : key === "favorites" ? favoritesCount : 0
           return (
             <button
               key={key}
