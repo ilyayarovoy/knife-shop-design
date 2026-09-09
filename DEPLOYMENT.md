@@ -19,7 +19,7 @@ cd knife-shop-design
 docker-compose up -d
 ```
 
-Приложение будет доступно на `http://your-vps-ip:3000`
+Приложение будет доступно на `http://your-vps-ip:8002`
 
 ### Альтернатива: Ручная сборка
 
@@ -49,7 +49,7 @@ server {
     server_name your-domain.com;
 
     location / {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://localhost:8002;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
