@@ -1,6 +1,6 @@
 import type { Category, DbUser, Product, ServerCart } from "./types"
 
-export const API_BASE = "https://shopy-knife-1.onrender.com/api"
+export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "https://shopy-knife-1.onrender.com/api"
 
 export class ApiError extends Error {
   status: number
