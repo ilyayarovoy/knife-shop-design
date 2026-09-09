@@ -9,7 +9,7 @@ import { FavoritesTab } from "@/components/favorites-tab"
 import { ProductDetail } from "@/components/product-detail"
 import { ProfileTab } from "@/components/profile-tab"
 import { TabBar, type TabKey } from "@/components/tab-bar"
-import { apiKeys, fetcher } from "@/lib/api"
+import { apiKeys, createOrder, fetcher } from "@/lib/api"
 import type { Category, Product } from "@/lib/types"
 import { useAppUser } from "@/lib/use-app-user"
 import { useCart } from "@/lib/use-cart"
@@ -19,6 +19,7 @@ export default function Page() {
   // tgUser — профиль из Telegram; dbUserId — внутренний id из БД для корзины
   const { tgUser, dbUser, dbUserId, isReady, error: userError } = useAppUser()
   const [tab, setTab] = useState<TabKey>("catalog")
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
 
   // Каталог: товары и категории с бэкенда
   const {
@@ -124,20 +125,9 @@ export default function Page() {
     if (!dbUserId) return
 
     try {
+      setCheckoutError(null)
       // Создаём заказ на бэкенде
-      const result = await fetch(`https://shopy-knife-1.onrender.com/api/orders/user/${dbUserId}/checkout`, {
-        method: "POST",
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json",
-        },
-      })
-
-      if (!result.ok) {
-        throw new Error(`Ошибка создания заказа: ${result.status}`)
-      }
-
-      const orderData = await result.json() as { order_id: number; message: string }
+      const orderData = await createOrder(dbUserId)
 
       // Отправляем данные боту через Telegram WebApp
       const tg = window.Telegram?.WebApp as
@@ -159,7 +149,7 @@ export default function Page() {
       setTab("catalog")
     } catch (error) {
       console.error("Ошибка оформления заказа:", error)
-      // TODO: показать пользователю уведомление об ошибке
+      setCheckoutError(error instanceof Error ? error.message : "Не удалось оформить заказ")
     }
   }, [dbUserId, cartItems, totalPrice, clear])
 
@@ -210,6 +200,20 @@ export default function Page() {
             onCheckout={handleCheckout}
             onGoCatalog={() => setTab("catalog")}
           />
+        )}
+
+        {checkoutError && (
+          <div className="fixed inset-x-0 top-20 z-50 mx-4 rounded-xl bg-destructive/90 p-4 text-center text-sm text-destructive-foreground backdrop-blur-sm">
+            <p className="font-semibold">Ошибка при оформлении заказа</p>
+            <p className="mt-1 text-xs opacity-90">{checkoutError}</p>
+            <button
+              type="button"
+              onClick={() => setCheckoutError(null)}
+              className="mt-3 rounded-lg bg-background/20 px-4 py-2 text-xs font-medium active:scale-95"
+            >
+              Закрыть
+            </button>
+          </div>
         )}
 
         {tab === "profile" && <ProfileTab user={tgUser} dbUser={dbUser} onNavigate={setTab} />}
