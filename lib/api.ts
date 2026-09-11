@@ -2,6 +2,12 @@ import type { Category, DbUser, Product, ServerCart } from "./types"
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE!
 
+// Проверяем что API_BASE загрузился правильно
+if (typeof window !== 'undefined') {
+  console.log('[API] API_BASE:', API_BASE)
+  console.log('[API] NEXT_PUBLIC_API_BASE env:', process.env.NEXT_PUBLIC_API_BASE)
+}
+
 export class ApiError extends Error {
   status: number
   constructor(message: string, status: number) {
@@ -73,22 +79,24 @@ interface CreateUserPayload {
 export async function getOrCreateUser(
   payload: CreateUserPayload,
 ): Promise<DbUser> {
-  const res = await fetch(`${API_BASE}/users/${payload.tg_id}`, {
+  const url = `${API_BASE}/users/${payload.tg_id}`
+  console.log('[getOrCreateUser] GET:', url)
+
+  const res = await fetch(url, {
     headers: { Accept: "application/json" },
   })
 
+  console.log('[getOrCreateUser] Status:', res.status)
+
   if (res.ok) {
-    return (await res.json()) as DbUser
+    const data = await res.json() as DbUser
+    console.log('[getOrCreateUser] Success:', data)
+    return data
   }
 
-  if (res.status !== 404) {
-    throw new ApiError(`Ошибка запроса пользователя: ${res.status}`, res.status)
-  }
-
-  // Пользователя нет — регистрируем
-  await mutateRequest(`${API_BASE}/users`, "POST", payload)
-  // Перечитываем, чтобы гарантированно получить внутренний id
-  return getUserByTgId(payload.tg_id)
+  const errorText = await res.text()
+  console.error('[getOrCreateUser] Error:', res.status, errorText)
+  throw new ApiError(`Не удалось загрузить профиль пользователя: ${res.status}`, res.status)
 }
 
 // Универсальный помощник для POST/PUT/DELETE.
