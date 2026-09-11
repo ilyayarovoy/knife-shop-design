@@ -115,6 +115,15 @@ export function CatalogTab({
             <ProductCardSkeleton key={i} />
           ))}
         </div>
+      ) : products.length === 0 ? (
+        <div className="flex flex-col items-center gap-2 py-16 text-center">
+          <p className="text-sm font-medium text-foreground">
+            Пока нет товаров
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Скоро здесь появятся крафтовые ножи
+          </p>
+        </div>
       ) : filtered.length === 0 ? (
         <p className="py-16 text-center text-sm text-muted-foreground">
           Ничего не найдено

@@ -38,6 +38,15 @@ export default function Page() {
 
   const categories = Array.isArray(categoriesData) ? categoriesData : []
 
+  // Ждём готовности, чтобы избежать hydration mismatch
+  if (!isReady) {
+    return (
+      <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    )
+  }
+
   if (userError) {
     return (
       <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-4 bg-background px-4 text-center">

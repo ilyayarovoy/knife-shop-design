@@ -92,6 +92,6 @@ docker-compose restart
 
 ## 🌐 API Backend
 
-Приложение использует API: `https://shopy-knife-1.onrender.com/api`
+Приложение использует API: `http://78.17.161.20:8001/`
 
-Для изменения API URL отредактируйте `lib/api.ts`
+Для изменения API URL установите переменную окружения `NEXT_PUBLIC_API_BASE` в `.env.local`

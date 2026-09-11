@@ -48,7 +48,7 @@ export default function RootLayout({
   return (
     <html
       lang="ru"
-      className={`dark ${geistSans.variable} ${geistMono.variable} bg-background`}
+      className={`dark ${geistSans.variable} ${geistMono.variable}`}
     >
       <head>
         <script src="https://telegram.org/js/telegram-web-app.js" />
