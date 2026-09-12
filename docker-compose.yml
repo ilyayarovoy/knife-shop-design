@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        - NEXT_PUBLIC_API_BASE=http://78.17.161.20:8001/api
+        - NEXT_PUBLIC_API_BASE=https://kompanyanozhey.online/api
     ports:
       - "8002:3000"
     environment:
