@@ -1,6 +1,6 @@
 import type { Category, DbUser, Product, ServerCart } from "./types"
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://78.17.161.20:8001/api'
+export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://kompanyanozhey.online/api'
 
 // Проверяем что API_BASE загрузился правильно
 if (typeof window !== 'undefined') {
@@ -32,16 +32,17 @@ export async function fetcher<T>(url: string): Promise<T> {
   return (await res.json()) as T
 }
 
-// Ключи для SWR
+// Ключи для SWR (в соответствии с документацией API)
 export const apiKeys = {
   categories: (skip = 0, limit = 100) =>
     `${API_BASE}/categories/all?skip=${skip}&limit=${limit}`,
   products: (skip = 0, limit = 100) =>
     `${API_BASE}/products/all?skip=${skip}&limit=${limit}`,
   product: (id: number) => `${API_BASE}/products/${id}`,
+  user: (tgId: number) => `${API_BASE}/users/${tgId}`,
   cart: (userId: number) => `${API_BASE}/cart/user/${userId}`,
   favorites: (userId: number) => `${API_BASE}/favorites/user/${userId}`,
-  favorite: (userId: number, productId: number) =>
+  favoriteCheck: (userId: number, productId: number) =>
     `${API_BASE}/favorites/user/${userId}/check/${productId}`,
   orders: (userId: number) => `${API_BASE}/orders/user/${userId}`,
   order: (orderId: number) => `${API_BASE}/orders/${orderId}`,
@@ -68,7 +69,7 @@ export function getCart(userId: number) {
 
 // GET /api/users/{tg_id} — поиск по Telegram ID
 export function getUserByTgId(tgId: number) {
-  return fetcher<DbUser>(`${API_BASE}/users/${tgId}`)
+  return fetcher<DbUser>(apiKeys.user(tgId))
 }
 
 interface CreateUserPayload {
@@ -83,7 +84,7 @@ interface CreateUserPayload {
 export async function getOrCreateUser(
   payload: CreateUserPayload,
 ): Promise<DbUser> {
-  const url = `${API_BASE}/users/${payload.tg_id}`
+  const url = apiKeys.user(payload.tg_id)
   console.log('[getOrCreateUser] GET:', url)
 
   const res = await fetch(url, {
@@ -216,7 +217,7 @@ interface FavoritesResponse {
 
 // GET /api/favorites/user/{userId}
 export function getFavorites(userId: number) {
-  return fetcher<FavoritesResponse | Product[]>(`${API_BASE}/favorites/user/${userId}`)
+  return fetcher<FavoritesResponse | Product[]>(apiKeys.favorites(userId))
 }
 
 // POST /api/favorites/user/{userId}/add
@@ -236,7 +237,7 @@ export function removeFromFavorites(userId: number, itemId: number) {
 
 // GET /api/favorites/user/{userId}/check/{productId}
 export function checkFavorite(userId: number, productId: number) {
-  return fetcher<boolean>(`${API_BASE}/favorites/user/${userId}/check/${productId}`)
+  return fetcher<boolean>(apiKeys.favoriteCheck(userId, productId))
 }
 
 // --- Заказы ---

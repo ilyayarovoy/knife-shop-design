@@ -61,34 +61,7 @@ export default function Page() {
     toggle: toggleFavorite,
   } = useFavorites(dbUserId)
 
-  // Все хуки вызваны — теперь можно делать условные return'ы
-
-  // Ждём готовности, чтобы избежать hydration mismatch
-  if (!isReady) {
-    return (
-      <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
-    )
-  }
-
-  if (userError) {
-    return (
-      <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-4 bg-background px-4 text-center">
-        <p className="text-sm text-muted-foreground">
-          Не удалось загрузить профиль пользователя
-        </p>
-        <button
-          type="button"
-          onClick={() => window.location.reload()}
-          className="flex h-10 items-center justify-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground active:scale-[0.98]"
-        >
-          Перезагрузить
-        </button>
-      </div>
-    )
-  }
-
+  // Все хуки должны быть вызваны до условных return'ов (правило React)
   const handleAdd = useCallback(
     (product: Product) => {
       void addByProduct(product)
@@ -124,7 +97,6 @@ export default function Page() {
     [toggleFavorite],
   )
 
-  // Открытие детального просмотра: ProductDetail догрузит /api/products/{id}
   const handleOpen = useCallback((product: Product) => {
     setOpenedProduct(product)
   }, [])
@@ -134,10 +106,8 @@ export default function Page() {
 
     try {
       setCheckoutError(null)
-      // Создаём заказ на бэкенде
       const orderData = await createOrder(dbUserId)
 
-      // Отправляем данные боту через Telegram WebApp
       const tg = window.Telegram?.WebApp as
         | { sendData?: (data: string) => void }
         | undefined
@@ -152,7 +122,6 @@ export default function Page() {
         }),
       )
 
-      // Очищаем корзину и переходим в каталог
       void clear()
       setTab("catalog")
     } catch (error) {
@@ -160,6 +129,33 @@ export default function Page() {
       setCheckoutError(error instanceof Error ? error.message : "Не удалось оформить заказ")
     }
   }, [dbUserId, cartItems, totalPrice, clear])
+
+  // Теперь можно делать условные return'ы
+
+  if (!isReady) {
+    return (
+      <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    )
+  }
+
+  if (userError) {
+    return (
+      <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-4 bg-background px-4 text-center">
+        <p className="text-sm text-muted-foreground">
+          Не удалось загрузить профиль пользователя
+        </p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="flex h-10 items-center justify-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground active:scale-[0.98]"
+        >
+          Перезагрузить
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-background pb-24">
