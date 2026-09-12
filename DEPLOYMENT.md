@@ -92,6 +92,33 @@ docker-compose restart
 
 ## 🌐 API Backend
 
-Приложение использует API: `http://78.17.161.20:8001/`
+Приложение использует API: `http://78.17.161.20:8001/api`
 
-Для изменения API URL установите переменную окружения `NEXT_PUBLIC_API_BASE` в `.env.local`
+### ⚠️ ВАЖНО: Переменные окружения в Docker
+
+`NEXT_PUBLIC_API_BASE` встраивается в код на этапе сборки Next.js, поэтому:
+
+1. **URL задается в `docker-compose.yml`** через build args:
+   ```yaml
+   build:
+     args:
+       - NEXT_PUBLIC_API_BASE=http://78.17.161.20:8001/api
+   ```
+
+2. **После изменения URL нужен rebuild**:
+   ```bash
+   docker-compose up -d --build
+   ```
+
+3. **Runtime ENV не работает** — переменная должна быть доступна на этапе `npm run build`
+
+### Troubleshooting
+
+**"Не удалось загрузить профиль пользователя"**
+- Проверь что API URL правильный в `docker-compose.yml`
+- Убедись что контейнер пересобран: `docker-compose up -d --build`
+- Проверь логи браузера: должен быть `[API] API_BASE: http://78.17.161.20:8001/api`
+
+**Пустой каталог**
+- Проверь что в базе есть данные: `curl http://78.17.161.20:8001/api/products/all`
+- Если база пустая — добавь товары и категории через админку API
