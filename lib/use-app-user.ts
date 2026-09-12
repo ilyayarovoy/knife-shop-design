@@ -30,18 +30,36 @@ export function useAppUser(): UseAppUser {
   } = useSWR(
     // Ждём готовности Telegram SDK, ключ завязан на tg_id
     isReady ? ["app-user", user.id] : null,
-    () =>
-      getOrCreateUser({
+    () => {
+      console.log("[useAppUser] Fetching user with tg_id:", user.id)
+      console.log("[useAppUser] User data:", {
+        tg_id: user.id,
+        username: user.username,
+        first_name: user.firstName,
+        last_name: user.lastName
+      })
+      return getOrCreateUser({
         tg_id: user.id,
         username: user.username ?? null,
         first_name: user.firstName ?? null,
         last_name: user.lastName ?? null,
-      }),
+      })
+    },
     {
       revalidateOnFocus: false,
       shouldRetryOnError: true,
+      errorRetryCount: 3,
+      errorRetryInterval: 2000,
+      onSuccess: (data) => {
+        console.log("[useAppUser] Successfully loaded user:", data)
+      },
       onError: (err) => {
         console.error("[useAppUser] Failed to load user:", err)
+        console.error("[useAppUser] Error details:", {
+          message: err?.message,
+          status: err?.status,
+          name: err?.name
+        })
       }
     },
   )

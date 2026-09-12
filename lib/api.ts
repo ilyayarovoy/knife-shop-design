@@ -1,11 +1,15 @@
 import type { Category, DbUser, Product, ServerCart } from "./types"
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_BASE!
+export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://78.17.161.20:8001/api'
 
 // Проверяем что API_BASE загрузился правильно
 if (typeof window !== 'undefined') {
   console.log('[API] API_BASE:', API_BASE)
   console.log('[API] NEXT_PUBLIC_API_BASE env:', process.env.NEXT_PUBLIC_API_BASE)
+
+  if (!process.env.NEXT_PUBLIC_API_BASE) {
+    console.warn('[API] NEXT_PUBLIC_API_BASE не установлена, используется fallback')
+  }
 }
 
 export class ApiError extends Error {
@@ -97,28 +101,35 @@ export async function getOrCreateUser(
   // Если пользователь не найден (404) — создаём его
   if (res.status === 404) {
     console.log('[getOrCreateUser] User not found, creating new user')
+    console.log('[getOrCreateUser] Payload:', payload)
     const createUrl = `${API_BASE}/users`
+    console.log('[getOrCreateUser] POST:', createUrl)
 
-    const createRes = await fetch(createUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    })
+    try {
+      const createRes = await fetch(createUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
 
-    console.log('[getOrCreateUser] Create status:', createRes.status)
+      console.log('[getOrCreateUser] Create status:', createRes.status)
 
-    if (createRes.ok) {
-      const newUser = await createRes.json() as DbUser
-      console.log('[getOrCreateUser] Created:', newUser)
-      return newUser
+      if (createRes.ok) {
+        const newUser = await createRes.json() as DbUser
+        console.log('[getOrCreateUser] Created:', newUser)
+        return newUser
+      }
+
+      const createError = await createRes.text()
+      console.error('[getOrCreateUser] Create error:', createRes.status, createError)
+      throw new ApiError(`Не удалось создать профиль пользователя: ${createRes.status}`, createRes.status)
+    } catch (err) {
+      console.error('[getOrCreateUser] Network error during user creation:', err)
+      throw new ApiError(`Ошибка сети при создании пользователя: ${err instanceof Error ? err.message : 'Unknown'}`, 0)
     }
-
-    const createError = await createRes.text()
-    console.error('[getOrCreateUser] Create error:', createRes.status, createError)
-    throw new ApiError(`Не удалось создать профиль пользователя: ${createRes.status}`, createRes.status)
   }
 
   const errorText = await res.text()
