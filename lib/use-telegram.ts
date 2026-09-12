@@ -48,21 +48,41 @@ export function useTelegram() {
       const tg = window.Telegram?.WebApp
       const tgUser = tg?.initDataUnsafe?.user
 
-      if (tg && tgUser) {
-        console.log("[v0] Telegram user detected:", tgUser.id, tgUser.username)
-        tg.ready()
-        tg.expand()
-        tg.setHeaderColor?.("#0a0a0b")
-        tg.setBackgroundColor?.("#0a0a0b")
-        setUser({
-          id: tgUser.id,
-          firstName: tgUser.first_name,
-          lastName: tgUser.last_name,
-          username: tgUser.username,
-          photoUrl: tgUser.photo_url,
-        })
-        setIsReady(true)
-        return
+      console.log('[useTelegram] Attempt', attempts, 'window.Telegram:', !!window.Telegram)
+      console.log('[useTelegram] WebApp:', !!tg)
+      console.log('[useTelegram] initDataUnsafe:', tg?.initDataUnsafe)
+      console.log('[useTelegram] user:', tgUser)
+
+      // Проверяем что WebApp загрузился
+      if (tg) {
+        // Если есть пользователь — используем его
+        if (tgUser && tgUser.id) {
+          console.log("[useTelegram] Telegram user detected:", tgUser.id, tgUser.username || 'no username')
+          tg.ready()
+          tg.expand()
+          tg.setHeaderColor?.("#0a0a0b")
+          tg.setBackgroundColor?.("#0a0a0b")
+          setUser({
+            id: tgUser.id,
+            firstName: tgUser.first_name,
+            lastName: tgUser.last_name,
+            username: tgUser.username,
+            photoUrl: tgUser.photo_url,
+          })
+          setIsReady(true)
+          return
+        }
+
+        // WebApp есть, но пользователя нет после 30 попыток — используем fallback
+        if (attempts >= 30) {
+          console.warn("[useTelegram] Telegram WebApp loaded but user data not available, using fallback")
+          tg.ready()
+          tg.expand()
+          tg.setHeaderColor?.("#0a0a0b")
+          tg.setBackgroundColor?.("#0a0a0b")
+          setIsReady(true)
+          return
+        }
       }
 
       // Ещё не готово — пробуем снова (до ~3 секунд)
@@ -73,7 +93,7 @@ export function useTelegram() {
       }
 
       // Telegram так и не появился — значит запуск вне Telegram (превью в браузере)
-      console.log("[v0] Telegram WebApp not found, using fallback user")
+      console.log("[useTelegram] Telegram WebApp not found after", attempts, "attempts, using fallback user")
       setIsReady(true)
     }
 
