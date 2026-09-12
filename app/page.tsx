@@ -20,6 +20,7 @@ export default function Page() {
   const { tgUser, dbUser, dbUserId, isReady, error: userError } = useAppUser()
   const [tab, setTab] = useState<TabKey>("catalog")
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
+  const [openedProduct, setOpenedProduct] = useState<Product | null>(null)
 
   // Каталог: товары и категории с бэкенда
   const {
@@ -37,6 +38,30 @@ export default function Page() {
   )
 
   const categories = Array.isArray(categoriesData) ? categoriesData : []
+
+  // Корзина с бэкенда (GET/POST/PUT/DELETE /api/cart/...)
+  const {
+    cartItems,
+    totalItems,
+    totalPrice,
+    isLoading: cartLoading,
+    getQuantity,
+    addByProduct,
+    incrementByProduct,
+    decrementByProduct,
+    removeByProduct,
+    clear,
+  } = useCart(dbUserId)
+
+  // Избранное с бэкенда (GET/POST/DELETE /api/favorites/...)
+  const {
+    favorites,
+    isLoading: favoritesLoading,
+    isFavorite,
+    toggle: toggleFavorite,
+  } = useFavorites(dbUserId)
+
+  // Все хуки вызваны — теперь можно делать условные return'ы
 
   // Ждём готовности, чтобы избежать hydration mismatch
   if (!isReady) {
@@ -63,32 +88,6 @@ export default function Page() {
       </div>
     )
   }
-
-  // Корзина с бэкенда (GET/POST/PUT/DELETE /api/cart/...)
-  const {
-    cartItems,
-    totalItems,
-    totalPrice,
-    isLoading: cartLoading,
-    getQuantity,
-    addByProduct,
-    incrementByProduct,
-    decrementByProduct,
-    removeByProduct,
-    clear,
-  } = useCart(dbUserId)
-
-  // Избранное с бэкенда (GET/POST/DELETE /api/favorites/...)
-  const {
-    favorites,
-    isLoading: favoritesLoading,
-    isFavorite,
-    toggle: toggleFavorite,
-  } = useFavorites(dbUserId)
-
-
-  // Открытый товар для детального просмотра
-  const [openedProduct, setOpenedProduct] = useState<Product | null>(null)
 
   const handleAdd = useCallback(
     (product: Product) => {
