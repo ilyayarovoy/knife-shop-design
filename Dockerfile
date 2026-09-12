@@ -19,6 +19,10 @@ COPY . .
 # Отключаем телеметрию Next.js
 ENV NEXT_TELEMETRY_DISABLED 1
 
+# Передаем NEXT_PUBLIC переменные на этапе сборки
+ARG NEXT_PUBLIC_API_BASE
+ENV NEXT_PUBLIC_API_BASE=${NEXT_PUBLIC_API_BASE}
+
 RUN npm run build
 
 # Production образ
