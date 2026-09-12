@@ -94,6 +94,33 @@ export async function getOrCreateUser(
     return data
   }
 
+  // Если пользователь не найден (404) — создаём его
+  if (res.status === 404) {
+    console.log('[getOrCreateUser] User not found, creating new user')
+    const createUrl = `${API_BASE}/users`
+
+    const createRes = await fetch(createUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+
+    console.log('[getOrCreateUser] Create status:', createRes.status)
+
+    if (createRes.ok) {
+      const newUser = await createRes.json() as DbUser
+      console.log('[getOrCreateUser] Created:', newUser)
+      return newUser
+    }
+
+    const createError = await createRes.text()
+    console.error('[getOrCreateUser] Create error:', createRes.status, createError)
+    throw new ApiError(`Не удалось создать профиль пользователя: ${createRes.status}`, createRes.status)
+  }
+
   const errorText = await res.text()
   console.error('[getOrCreateUser] Error:', res.status, errorText)
   throw new ApiError(`Не удалось загрузить профиль пользователя: ${res.status}`, res.status)
