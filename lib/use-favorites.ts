@@ -55,8 +55,13 @@ export function useFavorites(userId: number | undefined) {
 
   const toggle = useCallback(
     async (product: Product) => {
-      if (!userId) return
+      console.log('[useFavorites.toggle] Called with:', { userId, productId: product.id })
+      if (!userId) {
+        console.warn('[useFavorites.toggle] No userId, skipping')
+        return
+      }
       const wasFavorite = isFavorite(product.id)
+      console.log('[useFavorites.toggle] Was favorite:', wasFavorite)
 
       // Оптимистичные данные - просто фильтруем существующие items
       const optimisticItems = wasFavorite
@@ -72,14 +77,17 @@ export function useFavorites(userId: number | undefined) {
         async () => {
           if (wasFavorite) {
             const favoriteItem = favoriteItems.find((item: any) => item.product_id === product.id)
+            console.log('[useFavorites.toggle] Removing from favorites, item:', favoriteItem)
             if (favoriteItem) {
               await removeFromFavorites(userId, favoriteItem.id)
             }
             // Возвращаем оптимистичные данные после удаления, не перечитываем с сервера
             return optimisticData
           } else {
+            console.log('[useFavorites.toggle] Adding to favorites')
             await addToFavorites(userId, product.id)
             // При добавлении перечитываем, чтобы получить реальный id
+            console.log('[useFavorites.toggle] Fetching updated favorites...')
             return getFavorites(userId)
           }
         },
@@ -89,6 +97,7 @@ export function useFavorites(userId: number | undefined) {
           revalidate: false,
         },
       )
+      console.log('[useFavorites.toggle] Mutation complete')
     },
     [userId, favoriteItems, isFavorite, mutate],
   )

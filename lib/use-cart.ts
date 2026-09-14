@@ -57,8 +57,14 @@ export function useCart(userId: number | undefined) {
   // Добавить товар (или увеличить, если уже в корзине)
   const addByProduct = useCallback(
     async (product: Product, quantity = 1) => {
-      if (!userId) return
+      console.log('[useCart.addByProduct] Called with:', { userId, productId: product.id, quantity })
+      if (!userId) {
+        console.warn('[useCart.addByProduct] No userId, skipping')
+        return
+      }
       const existing = items.find((i) => i.product_id === product.id)
+      console.log('[useCart.addByProduct] Existing item:', existing)
+
       const optimisticItems = existing
         ? items.map((i) =>
             i.product_id === product.id
@@ -78,7 +84,9 @@ export function useCart(userId: number | undefined) {
 
       await mutate(
         async () => {
+          console.log('[useCart.addByProduct] Calling addToCart API...')
           await addToCart(userId, product.id, quantity)
+          console.log('[useCart.addByProduct] Fetching updated cart...')
           return getCart(userId)
         },
         {
@@ -87,6 +95,7 @@ export function useCart(userId: number | undefined) {
           revalidate: false,
         },
       )
+      console.log('[useCart.addByProduct] Mutation complete')
     },
     [userId, items, mutate],
   )

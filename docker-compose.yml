@@ -6,7 +6,8 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        - NEXT_PUBLIC_API_BASE=https://kompanyanozhey.online/api
+        # API URL встраивается в build time - берётся из .env файла
+        - NEXT_PUBLIC_API_BASE=${NEXT_PUBLIC_API_BASE}
     ports:
       - "8002:3000"
     environment:

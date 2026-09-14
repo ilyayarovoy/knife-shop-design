@@ -1,15 +1,15 @@
 import type { Category, DbUser, Product, ServerCart } from "./types"
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://kompanyanozhey.online/api'
+// API_BASE теперь всегда берётся из переменной окружения
+const apiBase = process.env.NEXT_PUBLIC_API_BASE
+if (!apiBase) {
+  throw new Error('NEXT_PUBLIC_API_BASE environment variable is not set')
+}
+export const API_BASE = apiBase
 
 // Проверяем что API_BASE загрузился правильно
 if (typeof window !== 'undefined') {
   console.log('[API] API_BASE:', API_BASE)
-  console.log('[API] NEXT_PUBLIC_API_BASE env:', process.env.NEXT_PUBLIC_API_BASE)
-
-  if (!process.env.NEXT_PUBLIC_API_BASE) {
-    console.warn('[API] NEXT_PUBLIC_API_BASE не установлена, используется fallback')
-  }
 }
 
 export class ApiError extends Error {
@@ -149,6 +149,8 @@ async function mutateRequest<T>(
   method: "POST" | "PUT" | "DELETE",
   body?: unknown,
 ): Promise<T> {
+  console.log(`[mutateRequest] ${method} ${url}`, body ? { body } : '')
+
   const res = await fetch(url, {
     method,
     headers: {
@@ -157,25 +159,35 @@ async function mutateRequest<T>(
     },
     body: body ? JSON.stringify(body) : undefined,
   })
+
+  console.log(`[mutateRequest] Response status: ${res.status}`)
+
   if (!res.ok) {
+    const errorText = await res.text()
+    console.error(`[mutateRequest] Error ${res.status}:`, errorText)
     throw new ApiError(`Ошибка запроса: ${res.status}`, res.status)
   }
 
   // Нет содержимого — не пытаемся парсить JSON
   if (res.status === 204) {
+    console.log('[mutateRequest] No content (204)')
     return undefined as T
   }
 
   const text = await res.text()
   if (!text) {
+    console.log('[mutateRequest] Empty response')
     return undefined as T
   }
 
-  return JSON.parse(text) as T
+  const data = JSON.parse(text) as T
+  console.log('[mutateRequest] Success:', data)
+  return data
 }
 
 // POST /api/cart/user/{userId}/add
 export function addToCart(userId: number, productId: number, quantity = 1) {
+  console.log('[addToCart] Adding to cart:', { userId, productId, quantity })
   return mutateRequest(`${API_BASE}/cart/user/${userId}/add`, "POST", {
     product_id: productId,
     quantity,
@@ -188,6 +200,7 @@ export function updateCartItem(
   itemId: number,
   quantity: number,
 ) {
+  console.log('[updateCartItem] Updating cart item:', { userId, itemId, quantity })
   return mutateRequest(
     `${API_BASE}/cart/user/${userId}/item/${itemId}`,
     "PUT",
@@ -197,6 +210,7 @@ export function updateCartItem(
 
 // DELETE /api/cart/user/{userId}/item/{itemId}
 export function removeCartItem(userId: number, itemId: number) {
+  console.log('[removeCartItem] Removing from cart:', { userId, itemId })
   return mutateRequest(
     `${API_BASE}/cart/user/${userId}/item/${itemId}`,
     "DELETE",
@@ -222,6 +236,7 @@ export function getFavorites(userId: number) {
 
 // POST /api/favorites/user/{userId}/add
 export function addToFavorites(userId: number, productId: number) {
+  console.log('[addToFavorites] Adding to favorites:', { userId, productId })
   return mutateRequest(`${API_BASE}/favorites/user/${userId}/add`, "POST", {
     product_id: productId,
   })
@@ -229,6 +244,7 @@ export function addToFavorites(userId: number, productId: number) {
 
 // DELETE /api/favorites/user/{userId}/item/{itemId}
 export function removeFromFavorites(userId: number, itemId: number) {
+  console.log('[removeFromFavorites] Removing from favorites:', { userId, itemId })
   return mutateRequest(
     `${API_BASE}/favorites/user/${userId}/item/${itemId}`,
     "DELETE",
