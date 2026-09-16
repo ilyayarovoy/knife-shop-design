@@ -40,15 +40,18 @@ export function CatalogTab({
   const [activeCategory, setActiveCategory] = useState<number | null>(null)
 
   const filtered = useMemo(() => {
-    return products.filter((p) => {
-      const matchesCategory =
-        activeCategory === null || p.category_id === activeCategory
-      const q = query.toLowerCase()
-      const matchesQuery =
-        p.title.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q)
-      return matchesCategory && matchesQuery
-    })
+    return products
+      .slice()
+      .reverse()
+      .filter((p) => {
+        const matchesCategory =
+          activeCategory === null || p.category_id === activeCategory
+        const q = query.toLowerCase()
+        const matchesQuery =
+          p.title.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q)
+        return matchesCategory && matchesQuery
+      })
   }, [products, activeCategory, query])
 
   return (
